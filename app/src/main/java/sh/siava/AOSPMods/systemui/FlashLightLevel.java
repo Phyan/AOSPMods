@@ -7,6 +7,7 @@ import static de.robv.android.xposed.XposedHelpers.getAdditionalInstanceField;
 import static de.robv.android.xposed.XposedHelpers.getObjectField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalInstanceField;
 import static sh.siava.AOSPMods.XPrefs.Xprefs;
+import static sh.siava.AOSPMods.systemui.QSTileGrid.QSHapticEnabled;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -20,6 +21,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.VibrationEffect;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -137,6 +139,7 @@ public class FlashLightLevel extends XposedModPack {
 											Xprefs.edit().putFloat("flashPCT", currentPct).apply();
 										} else {
 											handleFlashLightClick(true, currentPct);
+											if (QSHapticEnabled) SystemUtils.vibrate(VibrationEffect.EFFECT_CLICK);
 										}
 										return true;
 									}
@@ -173,19 +176,7 @@ public class FlashLightLevel extends XposedModPack {
 	}
 
 	private void handleFlashLightClick(boolean toggle, float pct) {
-		boolean currState = SystemUtils.isFlashOn();
-
-		if (!toggle && !currState) return; //nothing to do
-
-		if (toggle) {
-			currState = !currState;
-		}
-
-		if (currState) {
-			SystemUtils.setFlash(true, pct);
-		} else {
-			SystemUtils.setFlash(false);
-		}
+		SystemUtils.setFlash(toggle ^ SystemUtils.isFlashOn(), pct);
 	}
 
 	private class flashPercentageShape extends Drawable {
@@ -208,11 +199,14 @@ public class FlashLightLevel extends XposedModPack {
 
 		@Override
 		public void draw(@NonNull Canvas canvas) {
-			Bitmap bitmap = Bitmap.createBitmap(Math.round(shape.getBounds().width() * currentPct), shape.getBounds().height(), Bitmap.Config.ARGB_8888);
-			Canvas tempCanvas = new Canvas(bitmap);
-			shape.draw(tempCanvas);
+			try {
+				Bitmap bitmap = Bitmap.createBitmap(Math.round(shape.getBounds().width() * currentPct), shape.getBounds().height(), Bitmap.Config.ARGB_8888);
+				Canvas tempCanvas = new Canvas(bitmap);
+				shape.draw(tempCanvas);
 
-			canvas.drawBitmap(bitmap, 0, 0, new Paint());
+				canvas.drawBitmap(bitmap, 0, 0, new Paint());
+			}
+			catch (Throwable ignored){}
 		}
 
 		@Override
