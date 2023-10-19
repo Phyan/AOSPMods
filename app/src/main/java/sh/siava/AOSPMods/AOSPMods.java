@@ -136,7 +136,7 @@ public class AOSPMods implements IXposedHookLoadPackage {
 						return;
 					}
 
-					new SystemUtils(mContext, lpparam.packageName.equals(SYSTEM_UI_PACKAGE) && !isSecondProcess);
+					new SystemUtils(mContext, Xprefs.getBoolean("EnableCameraManager", true));
 					XPrefs.loadEverything(mContext.getPackageName());
 				}
 
